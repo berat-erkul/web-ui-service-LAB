@@ -1,8 +1,10 @@
 package com.cydeo.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
@@ -10,6 +12,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
@@ -36,14 +39,22 @@ public class WebClientConfig {
 
     @Bean
     public WebClient webClient(OAuth2AuthorizedClientManager authorizedClientManager,
-                               @Value("${gateway.base-url}") String gatewayBaseUrl) {
+                               @Value("${gateway.base-url}") String gatewayBaseUrl,
+                               ObjectMapper objectMapper) {
 
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2 =
                 new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
         oauth2.setDefaultOAuth2AuthorizedClient(true);
 
+        // Use the Spring-managed ObjectMapper (has JavaTimeModule for LocalDate, etc.)
+        ExchangeStrategies strategies = ExchangeStrategies.builder()
+                .codecs(config -> config.defaultCodecs()
+                        .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper)))
+                .build();
+
         return WebClient.builder()
                 .baseUrl(gatewayBaseUrl)
+                .exchangeStrategies(strategies)
                 .apply(oauth2.oauth2Configuration())
                 .build();
     }

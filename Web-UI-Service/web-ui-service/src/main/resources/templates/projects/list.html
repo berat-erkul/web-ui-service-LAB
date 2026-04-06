@@ -5,7 +5,12 @@
 <body>
 <th:block th:fragment="content">
 
-    <div th:if="${projects == null or projects.isEmpty()}" class="alert alert-info" role="alert">
+    <div th:if="${fetchError}" class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${fetchError}"></span>
+    </div>
+
+    <div th:if="${projects == null or projects.isEmpty() and fetchError == null}" class="alert alert-info" role="alert">
         <i class="bi bi-info-circle me-2"></i>No projects found.
     </div>
 
