@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(pageTitle='Projects', content=~{::content})}">
+<head><title>Projects</title></head>
+<body>
+<th:block th:fragment="content">
+
+    <div th:if="${projects == null or projects.isEmpty()}" class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle me-2"></i>No projects found.
+    </div>
+
+    <div th:unless="${projects == null or projects.isEmpty()}" class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Manager</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Status</th>
+                        <th>Done / Todo</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="project, stat : ${projects}">
+                        <td th:text="${stat.count}" class="text-muted small"></td>
+                        <td><code th:text="${project.projectCode}"></code></td>
+                        <td th:text="${project.projectName}"></td>
+                        <td th:text="${project.assignedManager}"></td>
+                        <td th:text="${project.startDate}"></td>
+                        <td th:text="${project.endDate}"></td>
+                        <td>
+                            <span th:text="${project.projectStatus}"
+                                  th:classappend="${project.projectStatus == 'COMPLETE'} ? 'bg-success' : (${project.projectStatus == 'IN_PROGRESS'} ? 'bg-primary' : 'bg-secondary')"
+                                  class="badge"></span>
+                        </td>
+                        <td>
+                            <span class="text-success fw-semibold" th:text="${project.completedTaskCount ?: 0}"></span>
+                            /
+                            <span class="text-danger fw-semibold" th:text="${project.nonCompletedTaskCount ?: 0}"></span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</th:block>
+</body>
+</html>

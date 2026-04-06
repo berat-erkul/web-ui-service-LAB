@@ -1,0 +1,12 @@
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/client/ProjectGatewayClient.java
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/dto/UserDto.java
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/config/SecurityConfig.java
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/WebUiServiceApplication.java
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/wrapper/ResponseWrapper.java
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/config/WebClientConfig.java
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/controller/UserViewController.java
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/dto/RoleDto.java
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/controller/DashboardController.java
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/client/UserGatewayClient.java
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/dto/ProjectDto.java
+/Users/beraterkul/Documents/WORK/WebMobil Lecture/LAB_Microservices_/Web-UI-Service/web-ui-service/src/main/java/com/cydeo/controller/ProjectViewController.java
