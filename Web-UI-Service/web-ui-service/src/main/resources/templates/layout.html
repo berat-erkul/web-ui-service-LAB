@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:fragment="layout(pageTitle, content)">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title th:replace="${pageTitle} ?: 'Ticketing App'">Ticketing App</title>
+    <title th:text="${pageTitle} ?: 'Ticketing App'">Ticketing App</title>
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet"
@@ -16,7 +17,6 @@
         .sidebar .nav-link:hover, .sidebar .nav-link.active { color: #fff; background-color: #343a40; border-radius: 4px; }
         .sidebar .nav-link i { margin-right: 8px; }
         .main-content { padding: 2rem; }
-        .navbar-brand { font-weight: 700; letter-spacing: 0.05em; }
     </style>
 </head>
 <body>
@@ -24,7 +24,7 @@
     <div class="row">
 
         <!-- Sidebar -->
-        <nav class="col-md-2 d-md-block sidebar py-3 px-2" th:fragment="sidebar">
+        <nav class="col-md-2 d-md-block sidebar py-3 px-2">
             <div class="text-white fw-bold fs-5 mb-4 px-2">
                 <i class="bi bi-ticket-perforated-fill me-2"></i>Ticketing
             </div>
@@ -64,7 +64,7 @@
         <main class="col-md-10 ms-sm-auto main-content">
             <!-- Top bar -->
             <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-                <h4 th:replace="${pageTitle} ?: 'Dashboard'" class="mb-0 fw-semibold">Dashboard</h4>
+                <h4 th:text="${pageTitle} ?: 'Dashboard'" class="mb-0 fw-semibold">Dashboard</h4>
                 <span class="text-muted small">
                     <i class="bi bi-person-circle me-1"></i>
                     <span sec:authentication="name">User</span>
