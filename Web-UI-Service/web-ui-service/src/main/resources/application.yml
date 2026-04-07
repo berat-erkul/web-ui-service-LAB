@@ -29,6 +29,9 @@ spring:
               - openid
               - profile
               - email
+              # "roles" scope triggers Keycloak's built-in roles mapper,
+              # which adds resource_access and realm_access to the token/userinfo.
+              - roles
         provider:
           keycloak:
             issuer-uri: http://localhost:9090/realms/cydeo-dev

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(pageTitle='Edit Project', content=~{::content})}">
+<head><title>Edit Project</title></head>
+<body>
+<th:block th:fragment="content">
+
+    <div th:if="${apiError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${apiError}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="max-width: 600px;">
+        <div class="card-body">
+            <form th:action="@{/projects/edit/{c}(c=${projectCode})}"
+                  th:object="${projectForm}" method="post" novalidate>
+
+                <div class="row g-3">
+
+                    <!-- Project Code — read-only (business key, used in URL path) -->
+                    <div class="col-md-4">
+                        <label class="form-label">Project Code</label>
+                        <input type="text" class="form-control" th:value="${projectCode}"
+                               readonly disabled/>
+                        <!-- Submit the code so form binding stays consistent -->
+                        <input type="hidden" th:field="*{projectCode}"/>
+                    </div>
+
+                    <!-- Project Name -->
+                    <div class="col-md-8">
+                        <label for="projectName" class="form-label">
+                            Project Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="projectName" th:field="*{projectName}"
+                               th:classappend="${#fields.hasErrors('projectName')} ? 'is-invalid'"
+                               class="form-control"/>
+                        <div class="form-text">3–16 characters.</div>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('projectName')}">
+                            <span th:errors="*{projectName}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Start Date -->
+                    <div class="col-md-6">
+                        <label for="startDate" class="form-label">
+                            Start Date <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" id="startDate" th:field="*{startDate}"
+                               th:classappend="${#fields.hasErrors('startDate')} ? 'is-invalid'"
+                               class="form-control"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('startDate')}">
+                            <span th:errors="*{startDate}"></span>
+                        </div>
+                    </div>
+
+                    <!-- End Date -->
+                    <div class="col-md-6">
+                        <label for="endDate" class="form-label">
+                            End Date <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" id="endDate" th:field="*{endDate}"
+                               th:classappend="${#fields.hasErrors('endDate')} ? 'is-invalid'"
+                               class="form-control"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('endDate')}">
+                            <span th:errors="*{endDate}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Project Detail -->
+                    <div class="col-12">
+                        <label for="projectDetail" class="form-label">Details</label>
+                        <textarea id="projectDetail" th:field="*{projectDetail}"
+                                  class="form-control" rows="3"></textarea>
+                    </div>
+
+                </div>
+
+                <hr class="my-4"/>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-floppy-fill me-1"></i>Save Changes
+                    </button>
+                    <a th:href="@{/projects}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</th:block>
+</body>
+</html>

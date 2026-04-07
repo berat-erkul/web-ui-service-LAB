@@ -1,19 +1,41 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout :: layout(pageTitle='Projects', content=~{::content})}">
 <head><title>Projects</title></head>
 <body>
 <th:block th:fragment="content">
 
+    <!-- Flash banners -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
     <div th:if="${fetchError}" class="alert alert-danger" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         <span th:text="${fetchError}"></span>
     </div>
 
-    <div th:if="${projects == null or projects.isEmpty() and fetchError == null}" class="alert alert-info" role="alert">
+    <!-- Toolbar: create is available to Admin AND Manager -->
+    <div class="d-flex justify-content-end mb-3" sec:authorize="hasAnyRole('Admin','Manager')">
+        <a th:href="@{/projects/create}" class="btn btn-primary btn-sm">
+            <i class="bi bi-folder-plus me-1"></i>Create Project
+        </a>
+    </div>
+
+    <!-- Empty state -->
+    <div th:if="${projects == null or projects.isEmpty() and fetchError == null}"
+         class="alert alert-info" role="alert">
         <i class="bi bi-info-circle me-2"></i>No projects found.
     </div>
 
+    <!-- Table -->
     <div th:unless="${projects == null or projects.isEmpty()}" class="card border-0 shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -28,25 +50,90 @@
                         <th>End</th>
                         <th>Status</th>
                         <th>Done / Todo</th>
+                        <th sec:authorize="hasAnyRole('Admin','Manager')">Tasks</th>
+                        <!-- Action column only for Manager (edit/start/complete/delete) -->
+                        <th sec:authorize="hasRole('Manager')">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="project, stat : ${projects}">
+                    <tr th:each="p, stat : ${projects}">
                         <td th:text="${stat.count}" class="text-muted small"></td>
-                        <td><code th:text="${project.projectCode}"></code></td>
-                        <td th:text="${project.projectName}"></td>
-                        <td th:text="${project.assignedManager}"></td>
-                        <td th:text="${project.startDate}"></td>
-                        <td th:text="${project.endDate}"></td>
+                        <td><code th:text="${p.projectCode}"></code></td>
+                        <td th:text="${p.projectName}"></td>
+                        <td th:text="${p.assignedManager}"></td>
+                        <td th:text="${p.startDate}"></td>
+                        <td th:text="${p.endDate}"></td>
                         <td>
-                            <span th:text="${project.projectStatus}"
-                                  th:classappend="${project.projectStatus == 'COMPLETE'} ? 'bg-success' : (${project.projectStatus == 'IN_PROGRESS'} ? 'bg-primary' : 'bg-secondary')"
-                                  class="badge"></span>
+                            <!--
+                              Backend Status enum: OPEN | IN_PROGRESS | COMPLETED
+                              (was incorrectly 'COMPLETE' in the Week 4 scaffold — fixed here)
+                            -->
+                            <span class="badge"
+                                  th:text="${p.projectStatus}"
+                                  th:classappend="${p.projectStatus == 'COMPLETED'}   ? 'bg-success'
+                                               : (${p.projectStatus == 'IN_PROGRESS'} ? 'bg-primary'
+                                               :                                        'bg-secondary')">
+                            </span>
                         </td>
                         <td>
-                            <span class="text-success fw-semibold" th:text="${project.completedTaskCount ?: 0}"></span>
+                            <span class="text-success fw-semibold"
+                                  th:text="${p.completedTaskCount ?: 0}"></span>
                             /
-                            <span class="text-danger fw-semibold" th:text="${project.nonCompletedTaskCount ?: 0}"></span>
+                            <span class="text-danger fw-semibold"
+                                  th:text="${p.nonCompletedTaskCount ?: 0}"></span>
+                        </td>
+
+                        <!-- View Tasks — Admin + Manager -->
+                        <td sec:authorize="hasAnyRole('Admin','Manager')">
+                            <a th:href="@{/tasks(projectCode=${p.projectCode})}"
+                               class="btn btn-outline-secondary btn-sm" title="View Tasks">
+                                <i class="bi bi-list-check"></i>
+                            </a>
+                        </td>
+
+                        <!-- Action buttons — Manager only -->
+                        <td sec:authorize="hasRole('Manager')">
+                            <div class="d-flex gap-1 flex-nowrap">
+
+                                <!-- Edit: available while not yet COMPLETED -->
+                                <a th:if="${p.projectStatus != 'COMPLETED'}"
+                                   th:href="@{/projects/edit/{c}(c=${p.projectCode})}"
+                                   class="btn btn-outline-primary btn-sm"
+                                   title="Edit">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </a>
+
+                                <!-- Start: OPEN → IN_PROGRESS -->
+                                <form th:if="${p.projectStatus == 'OPEN'}"
+                                      th:action="@{/projects/start/{c}(c=${p.projectCode})}"
+                                      method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-success btn-sm" title="Start">
+                                        <i class="bi bi-play-fill"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Complete: IN_PROGRESS → COMPLETED -->
+                                <form th:if="${p.projectStatus == 'IN_PROGRESS'}"
+                                      th:action="@{/projects/complete/{c}(c=${p.projectCode})}"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Complete project ' + this.dataset.code + '? All its tasks will be completed too.');"
+                                      th:data-code="${p.projectCode}">
+                                    <button type="submit" class="btn btn-outline-success btn-sm" title="Complete">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Delete: always available for Manager -->
+                                <form th:action="@{/projects/delete/{c}(c=${p.projectCode})}"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete project ' + this.dataset.code + '?');"
+                                      th:data-code="${p.projectCode}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                </form>
+
+                            </div>
                         </td>
                     </tr>
                     </tbody>

@@ -35,16 +35,42 @@
                         <i class="bi bi-speedometer2"></i>Dashboard
                     </a>
                 </li>
-                <li class="nav-item">
+
+                <!-- Users: Admin only -->
+                <li class="nav-item" sec:authorize="hasRole('Admin')">
                     <a class="nav-link" th:href="@{/users}"
-                       th:classappend="${#httpServletRequest.requestURI == '/users'} ? 'active'">
+                       th:classappend="${#httpServletRequest.requestURI.startsWith('/users')} ? 'active'">
                         <i class="bi bi-people-fill"></i>Users
                     </a>
                 </li>
-                <li class="nav-item">
+
+                <!-- Projects: Admin + Manager -->
+                <li class="nav-item" sec:authorize="hasAnyRole('Admin','Manager')">
                     <a class="nav-link" th:href="@{/projects}"
-                       th:classappend="${#httpServletRequest.requestURI == '/projects'} ? 'active'">
+                       th:classappend="${#httpServletRequest.requestURI.startsWith('/projects')} ? 'active'">
                         <i class="bi bi-kanban-fill"></i>Projects
+                    </a>
+                </li>
+
+                <!-- Tasks (by project): Admin + Manager -->
+                <li class="nav-item" sec:authorize="hasAnyRole('Admin','Manager')">
+                    <a class="nav-link" th:href="@{/tasks}"
+                       th:classappend="${#httpServletRequest.requestURI.startsWith('/tasks')} ? 'active'">
+                        <i class="bi bi-list-check"></i>Tasks
+                    </a>
+                </li>
+
+                <!-- Employee task views -->
+                <li class="nav-item" sec:authorize="hasRole('Employee')">
+                    <a class="nav-link" th:href="@{/tasks/pending}"
+                       th:classappend="${#httpServletRequest.requestURI == '/tasks/pending'} ? 'active'">
+                        <i class="bi bi-list-task"></i>My Tasks
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="hasRole('Employee')">
+                    <a class="nav-link" th:href="@{/tasks/archive}"
+                       th:classappend="${#httpServletRequest.requestURI == '/tasks/archive'} ? 'active'">
+                        <i class="bi bi-archive"></i>Completed
                     </a>
                 </li>
             </ul>

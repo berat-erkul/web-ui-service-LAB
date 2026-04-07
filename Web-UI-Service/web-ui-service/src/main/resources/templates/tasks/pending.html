@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(pageTitle='My Pending Tasks', content=~{::content})}">
+<head><title>My Pending Tasks</title></head>
+<body>
+<th:block th:fragment="content">
+
+    <!-- Flash banners -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${fetchError}" class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${fetchError}"></span>
+    </div>
+
+    <!-- Quick link to archive -->
+    <div class="d-flex justify-content-end mb-3">
+        <a th:href="@{/tasks/archive}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-archive me-1"></i>Completed Tasks
+        </a>
+    </div>
+
+    <!-- Empty state -->
+    <div th:if="${tasks == null or tasks.isEmpty() and fetchError == null}"
+         class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle me-2"></i>You have no pending tasks.
+    </div>
+
+    <!-- Task table -->
+    <div th:unless="${tasks == null or tasks.isEmpty()}" class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Code</th>
+                        <th>Subject</th>
+                        <th>Project</th>
+                        <th>Status</th>
+                        <th>Assigned</th>
+                        <th>Update Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="t, stat : ${tasks}">
+                        <td th:text="${stat.count}" class="text-muted small"></td>
+                        <td><code th:text="${t.taskCode}"></code></td>
+                        <td th:text="${t.taskSubject}"></td>
+                        <td><code th:text="${t.projectCode}"></code></td>
+                        <td>
+                            <span class="badge"
+                                  th:text="${t.taskStatus}"
+                                  th:classappend="${t.taskStatus == 'IN_PROGRESS'} ? 'bg-primary' : 'bg-secondary'">
+                            </span>
+                        </td>
+                        <td th:text="${t.assignedDate}"></td>
+                        <td>
+                            <!-- OPEN → IN_PROGRESS -->
+                            <form th:if="${t.taskStatus == 'OPEN'}"
+                                  th:action="@{/tasks/update-status/{c}(c=${t.taskCode})}"
+                                  method="post" class="d-inline">
+                                <input type="hidden" name="status" value="IN_PROGRESS"/>
+                                <button type="submit" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-play-fill me-1"></i>Start
+                                </button>
+                            </form>
+                            <!-- IN_PROGRESS → COMPLETED -->
+                            <form th:if="${t.taskStatus == 'IN_PROGRESS'}"
+                                  th:action="@{/tasks/update-status/{c}(c=${t.taskCode})}"
+                                  method="post" class="d-inline"
+                                  onsubmit="return confirm('Mark this task as completed?');">
+                                <input type="hidden" name="status" value="COMPLETED"/>
+                                <button type="submit" class="btn btn-outline-success btn-sm">
+                                    <i class="bi bi-check-lg me-1"></i>Complete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</th:block>
+</body>
+</html>

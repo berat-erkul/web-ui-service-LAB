@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(pageTitle='Edit Task', content=~{::content})}">
+<head><title>Edit Task</title></head>
+<body>
+<th:block th:fragment="content">
+
+    <div th:if="${apiError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${apiError}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="max-width: 620px;">
+        <div class="card-body">
+            <form th:action="@{/tasks/edit/{c}(c=${taskCode})}"
+                  th:object="${taskForm}" method="post" novalidate>
+
+                <div class="row g-3">
+
+                    <!-- Task Code — read-only -->
+                    <div class="col-md-4">
+                        <label class="form-label">Task Code</label>
+                        <input type="text" class="form-control" th:value="${taskCode}"
+                               readonly disabled/>
+                        <input type="hidden" th:field="*{taskCode}"/>
+                    </div>
+
+                    <!-- Task Subject -->
+                    <div class="col-md-8">
+                        <label for="taskSubject" class="form-label">
+                            Task Subject <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="taskSubject" th:field="*{taskSubject}"
+                               th:classappend="${#fields.hasErrors('taskSubject')} ? 'is-invalid'"
+                               class="form-control"/>
+                        <div class="form-text">3–16 characters.</div>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('taskSubject')}">
+                            <span th:errors="*{taskSubject}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Project Code -->
+                    <div class="col-md-6">
+                        <label for="projectCode" class="form-label">
+                            Project Code <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="projectCode" th:field="*{projectCode}"
+                               th:classappend="${#fields.hasErrors('projectCode')} ? 'is-invalid'"
+                               class="form-control text-uppercase"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('projectCode')}">
+                            <span th:errors="*{projectCode}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Assigned Employee -->
+                    <div class="col-md-6">
+                        <label for="assignedEmployee" class="form-label">
+                            Assigned Employee <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="assignedEmployee" th:field="*{assignedEmployee}"
+                               th:classappend="${#fields.hasErrors('assignedEmployee')} ? 'is-invalid'"
+                               class="form-control"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('assignedEmployee')}">
+                            <span th:errors="*{assignedEmployee}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Task Status -->
+                    <div class="col-md-6">
+                        <label for="taskStatus" class="form-label">
+                            Status <span class="text-danger">*</span>
+                        </label>
+                        <select id="taskStatus" th:field="*{taskStatus}" class="form-select">
+                            <option value="">— Select status —</option>
+                            <option th:each="s : ${statusOptions}"
+                                    th:value="${s.name()}" th:text="${s.displayValue}"></option>
+                        </select>
+                    </div>
+
+                    <!-- Task Detail -->
+                    <div class="col-12">
+                        <label for="taskDetail" class="form-label">Details</label>
+                        <textarea id="taskDetail" th:field="*{taskDetail}"
+                                  class="form-control" rows="3"></textarea>
+                    </div>
+
+                </div>
+
+                <hr class="my-4"/>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-floppy-fill me-1"></i>Save Changes
+                    </button>
+                    <a th:href="${taskForm.projectCode != null and !taskForm.projectCode.isEmpty()} ? @{/tasks(projectCode=${taskForm.projectCode})} : @{/tasks}"
+                       class="btn btn-outline-secondary">Cancel</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</th:block>
+</body>
+</html>

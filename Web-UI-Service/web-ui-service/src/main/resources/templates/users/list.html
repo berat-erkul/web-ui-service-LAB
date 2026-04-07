@@ -1,19 +1,40 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{layout :: layout(pageTitle='Users', content=~{::content})}">
 <head><title>Users</title></head>
 <body>
 <th:block th:fragment="content">
 
+    <!-- Flash banners -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
     <div th:if="${fetchError}" class="alert alert-danger" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         <span th:text="${fetchError}"></span>
     </div>
 
+    <!-- Toolbar -->
+    <div class="d-flex justify-content-end mb-3" sec:authorize="hasRole('Admin')">
+        <a th:href="@{/users/create}" class="btn btn-primary btn-sm">
+            <i class="bi bi-person-plus-fill me-1"></i>Create User
+        </a>
+    </div>
+
+    <!-- Empty state -->
     <div th:if="${users == null or users.isEmpty() and fetchError == null}" class="alert alert-info" role="alert">
         <i class="bi bi-info-circle me-2"></i>No users found.
     </div>
 
+    <!-- Table -->
     <div th:unless="${users == null or users.isEmpty()}" class="card border-0 shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -27,6 +48,7 @@
                         <th>Role</th>
                         <th>Gender</th>
                         <th>Status</th>
+                        <th sec:authorize="hasRole('Admin')">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -42,6 +64,20 @@
                         <td>
                             <span th:if="${user.enabled}" class="badge bg-success">Active</span>
                             <span th:unless="${user.enabled}" class="badge bg-danger">Inactive</span>
+                        </td>
+                        <td sec:authorize="hasRole('Admin')">
+                            <a th:href="@{/users/edit/{u}(u=${user.userName})}"
+                               class="btn btn-outline-primary btn-sm me-1">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+                            <form th:action="@{/users/delete/{u}(u=${user.userName})}"
+                                  method="post" class="d-inline"
+                                  onsubmit="return confirm('Delete user ' + this.dataset.name + '?');"
+                                  th:data-name="${user.userName}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     </tbody>

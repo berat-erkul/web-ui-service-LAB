@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(pageTitle='Edit User', content=~{::content})}">
+<head><title>Edit User</title></head>
+<body>
+<th:block th:fragment="content">
+
+    <!-- API error banner -->
+    <div th:if="${apiError}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${apiError}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="max-width: 640px;">
+        <div class="card-body">
+
+            <form th:action="@{/users/edit/{u}(u=${username})}"
+                  th:object="${userForm}" method="post" novalidate>
+
+                <div class="row g-3">
+
+                    <!-- Username — read-only display + hidden input so the value is part of form state -->
+                    <div class="col-12">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" th:value="${username}" readonly disabled/>
+                        <!-- Submit the current userName so the form binding stays consistent -->
+                        <input type="hidden" th:field="*{userName}"/>
+                    </div>
+
+                    <!-- First Name -->
+                    <div class="col-md-6">
+                        <label for="firstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                        <input type="text" id="firstName" th:field="*{firstName}"
+                               th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid'"
+                               class="form-control"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}">
+                            <span th:errors="*{firstName}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="col-md-6">
+                        <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" id="lastName" th:field="*{lastName}"
+                               th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid'"
+                               class="form-control"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}">
+                            <span th:errors="*{lastName}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Password — must be re-entered (backend requires @NotBlank) -->
+                    <div class="col-12">
+                        <label for="password" class="form-label">
+                            Password <span class="text-danger">*</span>
+                        </label>
+                        <input type="password" id="password" th:field="*{password}"
+                               th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'"
+                               class="form-control" autocomplete="new-password"/>
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>
+                            The backend requires the password on every update. Enter the current or a new password.
+                        </div>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}">
+                            <span th:errors="*{password}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="col-md-6">
+                        <label for="phone" class="form-label">Phone <span class="text-danger">*</span></label>
+                        <input type="tel" id="phone" th:field="*{phone}"
+                               th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid'"
+                               class="form-control"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}">
+                            <span th:errors="*{phone}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Role -->
+                    <div class="col-md-6">
+                        <label for="roleDescription" class="form-label">Role <span class="text-danger">*</span></label>
+                        <select id="roleDescription" th:field="*{roleDescription}"
+                                th:classappend="${#fields.hasErrors('roleDescription')} ? 'is-invalid'"
+                                class="form-select">
+                            <option value="">— Select role —</option>
+                            <option th:each="r : ${roleOptions}"
+                                    th:value="${r}" th:text="${r}"></option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('roleDescription')}">
+                            <span th:errors="*{roleDescription}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="col-md-6">
+                        <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                        <select id="gender" th:field="*{gender}"
+                                th:classappend="${#fields.hasErrors('gender')} ? 'is-invalid'"
+                                class="form-select">
+                            <option value="">— Select gender —</option>
+                            <option th:each="g : ${genderOptions}"
+                                    th:value="${g.name()}" th:text="${g.displayValue}"></option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('gender')}">
+                            <span th:errors="*{gender}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Enabled -->
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="form-check mb-1">
+                            <input type="checkbox" id="enabled" th:field="*{enabled}" class="form-check-input"/>
+                            <label for="enabled" class="form-check-label">Active (enabled)</label>
+                        </div>
+                    </div>
+
+                </div><!-- /row -->
+
+                <hr class="my-4"/>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-floppy-fill me-1"></i>Save Changes
+                    </button>
+                    <a th:href="@{/users}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</th:block>
+</body>
+</html>
