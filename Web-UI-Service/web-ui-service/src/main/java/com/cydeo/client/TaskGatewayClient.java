@@ -1,7 +1,8 @@
 package com.cydeo.client;
 
-import com.cydeo.dto.ProjectDto;
-import com.cydeo.dto.ProjectForm;
+import com.cydeo.dto.TaskDto;
+import com.cydeo.dto.TaskForm;
+import com.cydeo.enums.Status;
 import com.cydeo.util.GatewayErrorHandler;
 import com.cydeo.wrapper.ResponseWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -21,9 +22,9 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProjectGatewayClient {
+public class TaskGatewayClient {
 
-    private static final String BASE = "/project-service/api/v1/project";
+    private static final String BASE = "/task-service/api/v1/task";
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
@@ -31,65 +32,96 @@ public class ProjectGatewayClient {
 
     // ── READ (lists) ───────────────────────────────────────────────────────
 
-    /** GET /read/all/admin — Admin. Used by the projects list page. */
-    public List<ProjectDto> getProjects() {
+    /**
+     * GET /read/all/{projectCode} — Admin or Manager.
+     * Returns all tasks belonging to a project.
+     */
+    public List<TaskDto> getTasksByProject(String projectCode) {
         try {
             ResponseWrapper response = webClient.get()
-                    .uri(BASE + "/read/all/admin")
+                    .uri(BASE + "/read/all/{code}", projectCode)
                     .retrieve()
                     .bodyToMono(ResponseWrapper.class)
                     .block();
             if (response != null && response.isSuccess() && response.getData() != null) {
-                return objectMapper.convertValue(response.getData(), new TypeReference<List<ProjectDto>>() {});
+                return objectMapper.convertValue(response.getData(), new TypeReference<List<TaskDto>>() {});
             }
         } catch (Exception e) {
-            log.error("getProjects (admin) failed: {}", e.getMessage());
+            log.error("getTasksByProject failed for {}: {}", projectCode, e.getMessage());
         }
         return Collections.emptyList();
     }
 
-    /** GET /read/all/manager — Manager. Used by the manager's projects list page. */
-    public List<ProjectDto> getManagerProjects() {
+    /**
+     * GET /read/employee/pending-tasks — Employee.
+     * Returns the logged-in employee's non-completed tasks.
+     */
+    public List<TaskDto> getPendingTasksForEmployee() {
         try {
             ResponseWrapper response = webClient.get()
-                    .uri(BASE + "/read/all/manager")
+                    .uri(BASE + "/read/employee/pending-tasks")
                     .retrieve()
                     .bodyToMono(ResponseWrapper.class)
                     .block();
             if (response != null && response.isSuccess() && response.getData() != null) {
-                return objectMapper.convertValue(response.getData(), new TypeReference<List<ProjectDto>>() {});
+                return objectMapper.convertValue(response.getData(), new TypeReference<List<TaskDto>>() {});
             }
         } catch (Exception e) {
-            log.error("getManagerProjects failed: {}", e.getMessage());
+            log.error("getPendingTasksForEmployee failed: {}", e.getMessage());
         }
         return Collections.emptyList();
     }
 
-    /** GET /read/{projectCode} — Admin or Manager. Used to populate the edit form. */
-    public ClientResult<ProjectDto> getProjectByCode(String projectCode) {
+    /**
+     * GET /read/employee/archive — Employee.
+     * Returns the logged-in employee's completed (archived) tasks.
+     */
+    public List<TaskDto> getArchivedTasksForEmployee() {
         try {
             ResponseWrapper response = webClient.get()
-                    .uri(BASE + "/read/{code}", projectCode)
+                    .uri(BASE + "/read/employee/archive")
                     .retrieve()
                     .bodyToMono(ResponseWrapper.class)
                     .block();
             if (response != null && response.isSuccess() && response.getData() != null) {
-                ProjectDto dto = objectMapper.convertValue(response.getData(), ProjectDto.class);
+                return objectMapper.convertValue(response.getData(), new TypeReference<List<TaskDto>>() {});
+            }
+        } catch (Exception e) {
+            log.error("getArchivedTasksForEmployee failed: {}", e.getMessage());
+        }
+        return Collections.emptyList();
+    }
+
+    // ── READ (single) ──────────────────────────────────────────────────────
+
+    /**
+     * GET /read/{taskCode} — Manager or Employee.
+     * Used to populate the edit form or status-update form.
+     */
+    public ClientResult<TaskDto> getTaskByCode(String taskCode) {
+        try {
+            ResponseWrapper response = webClient.get()
+                    .uri(BASE + "/read/{code}", taskCode)
+                    .retrieve()
+                    .bodyToMono(ResponseWrapper.class)
+                    .block();
+            if (response != null && response.isSuccess() && response.getData() != null) {
+                TaskDto dto = objectMapper.convertValue(response.getData(), TaskDto.class);
                 return ClientResult.ok(dto);
             }
-            return ClientResult.error("Project not found.");
+            return ClientResult.error("Task not found.");
         } catch (WebClientResponseException ex) {
             return ClientResult.error(errorHandler.extractMessage(ex));
         } catch (Exception ex) {
-            log.error("getProjectByCode failed: {}", ex.getMessage());
+            log.error("getTaskByCode failed: {}", ex.getMessage());
             return ClientResult.error(errorHandler.extractMessage(ex));
         }
     }
 
     // ── CREATE ─────────────────────────────────────────────────────────────
 
-    /** POST /create — Admin or Manager. */
-    public ClientResult<ProjectDto> createProject(ProjectForm form) {
+    /** POST /create — Manager. */
+    public ClientResult<TaskDto> createTask(TaskForm form) {
         try {
             ResponseWrapper response = webClient.post()
                     .uri(BASE + "/create")
@@ -99,92 +131,79 @@ public class ProjectGatewayClient {
                     .bodyToMono(ResponseWrapper.class)
                     .block();
             if (response != null && response.isSuccess() && response.getData() != null) {
-                ProjectDto dto = objectMapper.convertValue(response.getData(), ProjectDto.class);
+                TaskDto dto = objectMapper.convertValue(response.getData(), TaskDto.class);
                 return ClientResult.ok(dto);
             }
-            return ClientResult.error("Project could not be created.");
+            return ClientResult.error("Task could not be created.");
         } catch (WebClientResponseException ex) {
             return ClientResult.error(errorHandler.extractMessage(ex));
         } catch (Exception ex) {
-            log.error("createProject failed: {}", ex.getMessage());
+            log.error("createTask failed: {}", ex.getMessage());
             return ClientResult.error(errorHandler.extractMessage(ex));
         }
     }
 
-    // ── UPDATE ─────────────────────────────────────────────────────────────
+    // ── UPDATE (Manager full update) ───────────────────────────────────────
 
-    /** PUT /update/{projectCode} — Manager. */
-    public ClientResult<ProjectDto> updateProject(String projectCode, ProjectForm form) {
+    /** PUT /update/{taskCode} — Manager. Full field update. */
+    public ClientResult<TaskDto> updateTask(String taskCode, TaskForm form) {
         try {
             ResponseWrapper response = webClient.put()
-                    .uri(BASE + "/update/{code}", projectCode)
+                    .uri(BASE + "/update/{code}", taskCode)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(toRequestBody(form))
                     .retrieve()
                     .bodyToMono(ResponseWrapper.class)
                     .block();
             if (response != null && response.isSuccess() && response.getData() != null) {
-                ProjectDto dto = objectMapper.convertValue(response.getData(), ProjectDto.class);
+                TaskDto dto = objectMapper.convertValue(response.getData(), TaskDto.class);
                 return ClientResult.ok(dto);
             }
-            return ClientResult.error("Project could not be updated.");
+            return ClientResult.error("Task could not be updated.");
         } catch (WebClientResponseException ex) {
             return ClientResult.error(errorHandler.extractMessage(ex));
         } catch (Exception ex) {
-            log.error("updateProject failed: {}", ex.getMessage());
+            log.error("updateTask failed: {}", ex.getMessage());
             return ClientResult.error(errorHandler.extractMessage(ex));
         }
     }
 
-    /** PUT /start/{projectCode} — Manager. Transitions OPEN → IN_PROGRESS. */
-    public ClientResult<ProjectDto> startProject(String projectCode) {
-        try {
-            ResponseWrapper response = webClient.put()
-                    .uri(BASE + "/start/{code}", projectCode)
-                    .retrieve()
-                    .bodyToMono(ResponseWrapper.class)
-                    .block();
-            if (response != null && response.isSuccess() && response.getData() != null) {
-                ProjectDto dto = objectMapper.convertValue(response.getData(), ProjectDto.class);
-                return ClientResult.ok(dto);
-            }
-            return ClientResult.error("Project could not be started.");
-        } catch (WebClientResponseException ex) {
-            return ClientResult.error(errorHandler.extractMessage(ex));
-        } catch (Exception ex) {
-            log.error("startProject failed: {}", ex.getMessage());
-            return ClientResult.error(errorHandler.extractMessage(ex));
-        }
-    }
+    // ── UPDATE (Employee status transition) ────────────────────────────────
 
-    /** PUT /complete/{projectCode} — Manager. */
-    public ClientResult<ProjectDto> completeProject(String projectCode) {
+    /**
+     * PUT /update/employee/{taskCode}?status={status} — Employee.
+     * Allowed transitions: OPEN → IN_PROGRESS, IN_PROGRESS → COMPLETED.
+     */
+    public ClientResult<TaskDto> updateTaskStatus(String taskCode, Status status) {
         try {
             ResponseWrapper response = webClient.put()
-                    .uri(BASE + "/complete/{code}", projectCode)
+                    .uri(uriBuilder -> uriBuilder
+                            .path(BASE + "/update/employee/{code}")
+                            .queryParam("status", status.name())
+                            .build(taskCode))
                     .retrieve()
                     .bodyToMono(ResponseWrapper.class)
                     .block();
             if (response != null && response.isSuccess() && response.getData() != null) {
-                ProjectDto dto = objectMapper.convertValue(response.getData(), ProjectDto.class);
+                TaskDto dto = objectMapper.convertValue(response.getData(), TaskDto.class);
                 return ClientResult.ok(dto);
             }
-            return ClientResult.error("Project could not be completed.");
+            return ClientResult.error("Task status could not be updated.");
         } catch (WebClientResponseException ex) {
             return ClientResult.error(errorHandler.extractMessage(ex));
         } catch (Exception ex) {
-            log.error("completeProject failed: {}", ex.getMessage());
+            log.error("updateTaskStatus failed: {}", ex.getMessage());
             return ClientResult.error(errorHandler.extractMessage(ex));
         }
     }
 
     // ── DELETE ─────────────────────────────────────────────────────────────
 
-    /** DELETE /delete/{projectCode} — Manager. Returns 204 No Content on success. */
-    public ClientResult<Void> deleteProject(String projectCode) {
+    /** DELETE /delete/{taskCode} — Manager. Returns 204 No Content on success. */
+    public ClientResult<Void> deleteTask(String taskCode) {
         try {
             webClient.delete()
-                    .uri(BASE + "/delete/{code}", projectCode)
+                    .uri(BASE + "/delete/{code}", taskCode)
                     .retrieve()
                     .bodyToMono(Void.class)
                     .block();
@@ -192,24 +211,21 @@ public class ProjectGatewayClient {
         } catch (WebClientResponseException ex) {
             return ClientResult.error(errorHandler.extractMessage(ex));
         } catch (Exception ex) {
-            log.error("deleteProject failed: {}", ex.getMessage());
+            log.error("deleteTask failed: {}", ex.getMessage());
             return ClientResult.error(errorHandler.extractMessage(ex));
         }
     }
 
     // ── private helpers ────────────────────────────────────────────────────
 
-    /**
-     * LocalDate is converted to ISO String explicitly so the WebClient's default
-     * Jackson encoder (which may lack JavaTimeModule) handles it safely.
-     */
-    private Map<String, Object> toRequestBody(ProjectForm form) {
+    private Map<String, Object> toRequestBody(TaskForm form) {
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("projectName", form.getProjectName());
+        body.put("taskCode", form.getTaskCode());
+        body.put("taskSubject", form.getTaskSubject());
+        body.put("taskDetail", form.getTaskDetail());
+        body.put("taskStatus", form.getTaskStatus() != null ? form.getTaskStatus().name() : null);
         body.put("projectCode", form.getProjectCode());
-        body.put("startDate", form.getStartDate() != null ? form.getStartDate().toString() : null);
-        body.put("endDate", form.getEndDate() != null ? form.getEndDate().toString() : null);
-        body.put("projectDetail", form.getProjectDetail());
+        body.put("assignedEmployee", form.getAssignedEmployee());
         return body;
     }
 }
