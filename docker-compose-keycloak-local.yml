@@ -1,0 +1,60 @@
+# Keycloak + PostgreSQL - Yerel / UTM Ubuntu Server
+# Tek sunucuda her şey Docker konteynerında çalışır.
+# Kullanım: docker compose -f docker-compose-keycloak-local.yml up -d
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ticketing-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Cydeo123.
+      POSTGRES_DB: ticketingkeycloak
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ticketingkeycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - keycloak-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      # Docker ağında Postgres servisine isimle bağlan (RDS yerine)
+      KC_DB_URL: jdbc:postgresql://postgres:5432/ticketingkeycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: Cydeo123.
+
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+
+      # Yerel/UTM: localhost veya sunucu IP'niz (tarayıcıdan erişim için)
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+    ports:
+      - "9090:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - keycloak-net
+
+volumes:
+  postgres_data:
+
+networks:
+  keycloak-net:
+    driver: bridge
